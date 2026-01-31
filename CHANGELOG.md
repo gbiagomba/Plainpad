@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-01-31
+
+### Fixed
+- Ensure Edit menu actions target the editor focus reliably
+
+### Added
+- Save All option that saves non-empty tabs
+
 ## [0.2.3] - 2026-01-31
 
 ### Fixed

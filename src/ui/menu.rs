@@ -7,6 +7,7 @@ pub enum MenuAction {
     Print,
     Save,
     SaveAs,
+    SaveAll,
     CloseTab,
     Undo,
     Redo,
@@ -40,6 +41,10 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             }
             if ui.button("Save As...\tCtrl+Shift+S").clicked() {
                 action = Some(MenuAction::SaveAs);
+                ui.close_menu();
+            }
+            if ui.button("Save All").clicked() {
+                action = Some(MenuAction::SaveAll);
                 ui.close_menu();
             }
             ui.separator();

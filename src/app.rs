@@ -13,6 +13,7 @@ enum AppCommand {
     Print,
     Save,
     SaveAs,
+    SaveAll,
     CloseTab,
     NextTab,
     PreviousTab,
@@ -33,6 +34,7 @@ impl From<ui::menu::MenuAction> for AppCommand {
             ui::menu::MenuAction::Print => Self::Print,
             ui::menu::MenuAction::Save => Self::Save,
             ui::menu::MenuAction::SaveAs => Self::SaveAs,
+            ui::menu::MenuAction::SaveAll => Self::SaveAll,
             ui::menu::MenuAction::CloseTab => Self::CloseTab,
             ui::menu::MenuAction::Undo => Self::Undo,
             ui::menu::MenuAction::Redo => Self::Redo,
@@ -65,6 +67,7 @@ pub struct PlainpadApp {
     confirm_close: Option<usize>,
     error_message: Option<String>,
     editor_focused: bool,
+    editor_id: Option<egui::Id>,
 }
 
 impl PlainpadApp {
@@ -74,6 +77,7 @@ impl PlainpadApp {
             confirm_close: None,
             error_message: None,
             editor_focused: false,
+            editor_id: None,
         }
     }
 
@@ -84,6 +88,7 @@ impl PlainpadApp {
             AppCommand::Print => self.show_print_notice(),
             AppCommand::Save => self.save_current(),
             AppCommand::SaveAs => self.save_as_current(),
+            AppCommand::SaveAll => self.save_all_non_empty(),
             AppCommand::CloseTab => {
                 let index = self.editor.active_index();
                 self.request_close(index);
@@ -101,9 +106,11 @@ impl PlainpadApp {
     }
 
     fn send_edit_key(&self, ctx: &egui::Context, key: egui::Key, shift: bool) {
-        if !self.editor_focused {
+        let Some(editor_id) = self.editor_id else {
             return;
-        }
+        };
+
+        ctx.memory_mut(|memory| memory.request_focus(editor_id));
 
         let modifiers = egui::Modifiers {
             command: true,
@@ -130,9 +137,11 @@ impl PlainpadApp {
     }
 
     fn send_edit_event(&self, ctx: &egui::Context, event: egui::Event) {
-        if !self.editor_focused {
+        let Some(editor_id) = self.editor_id else {
             return;
-        }
+        };
+
+        ctx.memory_mut(|memory| memory.request_focus(editor_id));
 
         ctx.input_mut(|input| input.events.push(event));
     }
@@ -181,6 +190,32 @@ impl PlainpadApp {
             }
         }
     }
+
+    fn save_all_non_empty(&mut self) {
+        let total = self.editor.documents().len();
+        for index in 0..total {
+            let (is_empty, path) = {
+                let doc = &self.editor.documents()[index];
+                (doc.is_empty(), doc.path().cloned())
+            };
+
+            if is_empty {
+                continue;
+            }
+
+            let path = match path {
+                Some(path) => Some(path),
+                None => FileDialog::new().save_file(),
+            };
+
+            if let Some(path) = path {
+                if let Err(err) = self.editor.save_document(index, path) {
+                    self.error_message = Some(format!("Failed to save file: {err}"));
+                    return;
+                }
+            }
+        }
+    }
 }
 
 impl eframe::App for PlainpadApp {
@@ -212,11 +247,13 @@ impl eframe::App for PlainpadApp {
         }
 
         self.editor_focused = false;
+        self.editor_id = None;
 
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(doc) = self.editor.current_mut() {
                 let response = ui::editor_view::editor_view(ui, doc);
                 self.editor_focused = response.has_focus();
+                self.editor_id = Some(response.id);
             }
         });
 
