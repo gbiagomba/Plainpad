@@ -15,10 +15,16 @@ pub enum MenuAction {
     Copy,
     Paste,
     SelectAll,
+    ToggleStatusBar(bool),
+    ToggleLineNumbers(bool),
     Quit,
 }
 
-pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
+pub fn menu_bar(
+    ui: &mut egui::Ui,
+    show_status_bar: bool,
+    show_line_numbers: bool,
+) -> Option<MenuAction> {
     let mut action = None;
 
     egui::menu::bar(ui, |ui| {
@@ -82,6 +88,18 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             ui.separator();
             if ui.button("Select All\tCtrl+A").clicked() {
                 action = Some(MenuAction::SelectAll);
+                ui.close_menu();
+            }
+        });
+        ui.menu_button("View", |ui| {
+            let mut status_bar = show_status_bar;
+            if ui.checkbox(&mut status_bar, "Status Bar").clicked() {
+                action = Some(MenuAction::ToggleStatusBar(status_bar));
+                ui.close_menu();
+            }
+            let mut line_numbers = show_line_numbers;
+            if ui.checkbox(&mut line_numbers, "Line Numbers").clicked() {
+                action = Some(MenuAction::ToggleLineNumbers(line_numbers));
                 ui.close_menu();
             }
         });

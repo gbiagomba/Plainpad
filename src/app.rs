@@ -1,8 +1,10 @@
 use crate::{
+    document::Document,
     editor::Editor,
     shortcuts::{detect, ShortcutCommand},
     ui,
 };
+use arboard::Clipboard;
 use eframe::egui;
 use rfd::FileDialog;
 
@@ -23,6 +25,8 @@ enum AppCommand {
     Copy,
     Paste,
     SelectAll,
+    ToggleStatusBar(bool),
+    ToggleLineNumbers(bool),
     Quit,
 }
 
@@ -42,6 +46,8 @@ impl From<ui::menu::MenuAction> for AppCommand {
             ui::menu::MenuAction::Copy => Self::Copy,
             ui::menu::MenuAction::Paste => Self::Paste,
             ui::menu::MenuAction::SelectAll => Self::SelectAll,
+            ui::menu::MenuAction::ToggleStatusBar(enabled) => Self::ToggleStatusBar(enabled),
+            ui::menu::MenuAction::ToggleLineNumbers(enabled) => Self::ToggleLineNumbers(enabled),
             ui::menu::MenuAction::Quit => Self::Quit,
         }
     }
@@ -68,6 +74,8 @@ pub struct PlainpadApp {
     error_message: Option<String>,
     editor_focused: bool,
     editor_id: Option<egui::Id>,
+    show_status_bar: bool,
+    show_line_numbers: bool,
 }
 
 impl PlainpadApp {
@@ -78,6 +86,8 @@ impl PlainpadApp {
             error_message: None,
             editor_focused: false,
             editor_id: None,
+            show_status_bar: true,
+            show_line_numbers: false,
         }
     }
 
@@ -99,8 +109,10 @@ impl PlainpadApp {
             AppCommand::Redo => self.send_edit_key(ctx, egui::Key::Y, false),
             AppCommand::Cut => self.send_edit_event(ctx, egui::Event::Cut),
             AppCommand::Copy => self.send_edit_event(ctx, egui::Event::Copy),
-            AppCommand::Paste => self.send_edit_key(ctx, egui::Key::V, false),
+            AppCommand::Paste => self.paste_from_clipboard(ctx),
             AppCommand::SelectAll => self.send_edit_key(ctx, egui::Key::A, false),
+            AppCommand::ToggleStatusBar(enabled) => self.show_status_bar = enabled,
+            AppCommand::ToggleLineNumbers(enabled) => self.show_line_numbers = enabled,
             AppCommand::Quit => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
         }
     }
@@ -146,6 +158,24 @@ impl PlainpadApp {
         ctx.input_mut(|input| input.events.push(event));
     }
 
+    fn paste_from_clipboard(&mut self, ctx: &egui::Context) {
+        let Some(editor_id) = self.editor_id else {
+            return;
+        };
+
+        ctx.memory_mut(|memory| memory.request_focus(editor_id));
+
+        let clipboard_text = Clipboard::new()
+            .and_then(|mut clipboard| clipboard.get_text())
+            .ok();
+
+        if let Some(text) = clipboard_text {
+            ctx.input_mut(|input| input.events.push(egui::Event::Paste(text)));
+        } else {
+            self.error_message = Some("Failed to read clipboard contents.".to_string());
+        }
+    }
+
     fn request_close(&mut self, index: usize) {
         if let Some(doc) = self.editor.documents().get(index) {
             if doc.is_dirty() {
@@ -184,7 +214,8 @@ impl PlainpadApp {
 
     fn save_as_current(&mut self) {
         let index = self.editor.active_index();
-        if let Some(path) = FileDialog::new().save_file() {
+        let dialog = self.save_dialog_for(index);
+        if let Some(path) = dialog.save_file() {
             if let Err(err) = self.editor.save_document(index, path) {
                 self.error_message = Some(format!("Failed to save file: {err}"));
             }
@@ -205,7 +236,7 @@ impl PlainpadApp {
 
             let path = match path {
                 Some(path) => Some(path),
-                None => FileDialog::new().save_file(),
+                None => self.save_dialog_for(index).save_file(),
             };
 
             if let Some(path) = path {
@@ -216,6 +247,25 @@ impl PlainpadApp {
             }
         }
     }
+
+    fn save_dialog_for(&self, index: usize) -> FileDialog {
+        let name = self
+            .editor
+            .documents()
+            .get(index)
+            .map(Document::title)
+            .unwrap_or_else(|| "Untitled".to_string());
+
+        let file_name = if name.to_lowercase().ends_with(".txt") {
+            name
+        } else {
+            format!("{name}.txt")
+        };
+
+        FileDialog::new()
+            .add_filter("Text", &["txt"])
+            .set_file_name(file_name)
+    }
 }
 
 impl eframe::App for PlainpadApp {
@@ -223,7 +273,9 @@ impl eframe::App for PlainpadApp {
         let mut command: Option<AppCommand> = None;
 
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-            if let Some(action) = ui::menu::menu_bar(ui) {
+            if let Some(action) =
+                ui::menu::menu_bar(ui, self.show_status_bar, self.show_line_numbers)
+            {
                 command = Some(action.into());
             }
         });
@@ -235,6 +287,9 @@ impl eframe::App for PlainpadApp {
             }
             if let Some(index) = action.close {
                 self.request_close(index);
+            }
+            if action.new_tab {
+                self.editor.new_document();
             }
         });
 
@@ -251,11 +306,28 @@ impl eframe::App for PlainpadApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(doc) = self.editor.current_mut() {
-                let response = ui::editor_view::editor_view(ui, doc);
+                let response = ui::editor_view::editor_view(ui, doc, self.show_line_numbers);
                 self.editor_focused = response.has_focus();
                 self.editor_id = Some(response.id);
             }
         });
+
+        if self.show_status_bar {
+            egui::TopBottomPanel::bottom("status_bar").show(ctx, |ui| {
+                if let Some(doc) = self.editor.current() {
+                    let text = doc.text();
+                    let word_count = text.split_whitespace().count();
+                    let char_count = text.chars().count();
+                    let byte_count = text.len();
+                    let line_count = text.lines().count().max(1);
+                    ui.horizontal(|ui| {
+                        ui.label(format!(
+                            "Words: {word_count} | Chars: {char_count} | Bytes: {byte_count} | Lines: {line_count}"
+                        ));
+                    });
+                }
+            });
+        }
 
         if let Some(index) = self.confirm_close {
             egui::Window::new("Unsaved Changes")
