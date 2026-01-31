@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-01-31
+
+### Added
+- Find/replace dialog with regex search and replace all
+- Tab management actions to close tabs left or right of the active tab
+- Chrome-style tab shortcuts (Ctrl+1..9) and quit shortcut (Ctrl+Shift+W)
+- Quit confirmation when unsaved edits are open
+
 ## [0.4.0] - 2026-01-31
 
 ### Added

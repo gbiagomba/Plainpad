@@ -24,6 +24,7 @@ pub fn editor_view(
             editor_response = Some(
                 ui.add(
                     egui::TextEdit::multiline(doc.text_mut())
+                        .id_source("plainpad_editor")
                         .font(egui::TextStyle::Monospace)
                         .desired_rows(24)
                         .lock_focus(true)
@@ -37,6 +38,7 @@ pub fn editor_view(
     } else {
         ui.add(
             egui::TextEdit::multiline(doc.text_mut())
+                .id_source("plainpad_editor")
                 .font(egui::TextStyle::Monospace)
                 .desired_rows(24)
                 .lock_focus(true)

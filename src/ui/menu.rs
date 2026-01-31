@@ -9,8 +9,12 @@ pub enum MenuAction {
     SaveAs,
     SaveAll,
     CloseTab,
+    CloseTabsLeft,
+    CloseTabsRight,
     Undo,
     Redo,
+    Find,
+    Replace,
     Cut,
     Copy,
     Paste,
@@ -58,7 +62,15 @@ pub fn menu_bar(
                 action = Some(MenuAction::CloseTab);
                 ui.close_menu();
             }
-            if ui.button("Quit").clicked() {
+            if ui.button("Close Tabs to the Left").clicked() {
+                action = Some(MenuAction::CloseTabsLeft);
+                ui.close_menu();
+            }
+            if ui.button("Close Tabs to the Right").clicked() {
+                action = Some(MenuAction::CloseTabsRight);
+                ui.close_menu();
+            }
+            if ui.button("Quit\tCtrl+Shift+W").clicked() {
                 action = Some(MenuAction::Quit);
                 ui.close_menu();
             }
@@ -70,6 +82,15 @@ pub fn menu_bar(
             }
             if ui.button("Redo\tCtrl+Y").clicked() {
                 action = Some(MenuAction::Redo);
+                ui.close_menu();
+            }
+            ui.separator();
+            if ui.button("Find...\tCtrl+F").clicked() {
+                action = Some(MenuAction::Find);
+                ui.close_menu();
+            }
+            if ui.button("Replace...\tCtrl+H").clicked() {
+                action = Some(MenuAction::Replace);
                 ui.close_menu();
             }
             ui.separator();

@@ -1,6 +1,6 @@
 [package]
 name = "plainpad"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Gilles Biagomba <gilles.infosec@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"
@@ -12,6 +12,7 @@ categories = ["gui"]
 [dependencies]
 arboard = "3.6"
 eframe = { version = "0.27", default-features = false, features = ["default_fonts", "glow"] }
+regex = "1.10"
 ropey = "1.6"
 rfd = "0.14"
 
