@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-01-31
+
+### Changed
+- Updated macOS CI runner from macos-13 to macos-latest in AGENT.md Rule 4
+- Synced docs/AI_INSTRUCTIONS.md with AGENT.md
+
+### Removed
+- Deleted template agent files (docs/Agents/)
+- Removed empty Skills/ and rules/ directories
+- Removed Windows artifact (nul file)
+
+### Fixed
+- Cargo.lock now tracked in git (removed from .gitignore for reproducible builds)
+- Added nul to .gitignore to prevent future Windows artifacts
+
 ## [0.5.2] - 2026-01-31
 
 ### Added
