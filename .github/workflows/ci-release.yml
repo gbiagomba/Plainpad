@@ -1,0 +1,296 @@
+# .github/workflows/ci-release.yml
+#
+# TEMPLATE INSTRUCTIONS FOR CODING AGENT:
+# 1. Replace `PROJECT_TYPE` with either "rust" or "python".
+# 2. If PROJECT_TYPE == "rust":
+#    - Replace `program_name` in BINARY_NAME with the final binary name (Cargo [[bin]] name).
+#    - Ensure Cargo.toml and src/main.rs are set up accordingly.
+# 3. If PROJECT_TYPE == "python":
+#    - Replace `program_name` in PYTHON_PACKAGE_NAME with the package/distribution name.
+#    - Ensure pyproject.toml / setup.cfg / setup.py matches that name.
+# 4. Ensure there is a CHANGELOG.md with headings like "## v1.0.0". If not present,
+#    the workflow will fall back to the tag message for release notes.
+
+name: CI and Release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - '**'
+
+env:
+  PROJECT_TYPE: rust
+  BINARY_NAME: program_name
+  PYTHON_PACKAGE_NAME: program_name
+
+jobs:
+  build-test:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # RUST TOOLCHAIN + CI PATH
+      - name: Set up Rust
+        if: env.PROJECT_TYPE == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        if: env.PROJECT_TYPE == 'rust'
+        uses: swatinem/rust-cache@v2
+
+      - name: Rust Format (cargo fmt)
+        if: env.PROJECT_TYPE == 'rust'
+        run: cargo fmt --all -- --check
+
+      - name: Rust Lints (cargo clippy)
+        if: env.PROJECT_TYPE == 'rust'
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Rust Build (release)
+        if: env.PROJECT_TYPE == 'rust'
+        run: cargo build --release
+
+      - name: Rust Tests
+        if: env.PROJECT_TYPE == 'rust'
+        run: cargo test --all --no-fail-fast
+
+      - name: Upload Rust binary artifact
+        if: env.PROJECT_TYPE == 'rust' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.BINARY_NAME }}-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            target/release/${{ env.BINARY_NAME }}*
+
+      # PYTHON TOOLCHAIN + CI PATH
+      - name: Set up Python
+        if: env.PROJECT_TYPE == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        if: env.PROJECT_TYPE == 'python'
+        run: |
+          if [ -f "requirements-dev.txt" ]; then
+            pip install -r requirements-dev.txt
+          elif [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Python Lint/Format (optional placeholder)
+        if: env.PROJECT_TYPE == 'python'
+        run: |
+          echo "Add flake8/black/ruff/mypy here if desired"
+
+      - name: Python Tests
+        if: env.PROJECT_TYPE == 'python'
+        run: |
+          if [ -d "tests" ]; then
+            pip install pytest
+            pytest
+          else
+            echo "No tests/ directory found; skipping pytest."
+          fi
+
+      - name: Build Python package
+        if: env.PROJECT_TYPE == 'python' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          pip install build
+          python -m build
+        env:
+          PYTHON_PACKAGE_NAME: ${{ env.PYTHON_PACKAGE_NAME }}
+
+      - name: Upload Python package artifacts
+        if: env.PROJECT_TYPE == 'python' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.PYTHON_PACKAGE_NAME }}-dist
+          path: dist/*
+
+  # RUST-ONLY CROSS BUILDS (aarch64)
+  linux-arm64:
+    name: Linux aarch64 (cross)
+    runs-on: ubuntu-latest
+    if: env.PROJECT_TYPE == 'rust' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      - name: Install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Build (cross)
+        run: cross build --release --target aarch64-unknown-linux-gnu
+      - name: Upload binary (linux aarch64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.BINARY_NAME }}-linux-aarch64
+          path: target/aarch64-unknown-linux-gnu/release/${{ env.BINARY_NAME }}*
+
+  macos-arm64:
+    name: macOS aarch64 (native)
+    runs-on: macos-latest
+    if: env.PROJECT_TYPE == 'rust' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - name: Build (macOS aarch64)
+        run: cargo build --release --target aarch64-apple-darwin
+      - name: Upload binary (macOS aarch64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.BINARY_NAME }}-macos-aarch64
+          path: target/aarch64-apple-darwin/release/${{ env.BINARY_NAME }}*
+
+  windows-arm64:
+    name: Windows aarch64 (cross)
+    runs-on: windows-latest
+    if: env.PROJECT_TYPE == 'rust' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-pc-windows-msvc
+      - name: Build (windows aarch64)
+        run: cargo build --release --target aarch64-pc-windows-msvc
+      - name: Upload binary (windows aarch64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.BINARY_NAME }}-windows-aarch64
+          path: target/aarch64-pc-windows-msvc/release/${{ env.BINARY_NAME }}.exe
+
+  release:
+    name: Release on tag
+    runs-on: ubuntu-latest
+    needs:
+      - build-test
+      - linux-arm64
+      - macos-arm64
+      - windows-arm64
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts (Rust + Python)
+        uses: actions/download-artifact@v7
+        with:
+          pattern: "*"
+          merge-multiple: true
+
+      - name: Create checksums (Rust binaries only)
+        if: env.PROJECT_TYPE == 'rust'
+        run: |
+          for f in ${BINARY_NAME}-*; do
+            if [ -f "$f" ]; then
+              sha256sum "$f" > "$f.sha256"
+            fi
+          done
+        env:
+          BINARY_NAME: ${{ env.BINARY_NAME }}
+
+      - name: Extract release notes
+        id: extract_notes
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ -f CHANGELOG.md ]; then
+            awk "/^## $VERSION/,/^## /{if (/^## $VERSION/) f=1; else if (/^## /) f=0; if (f && !/^## $VERSION/) print}" CHANGELOG.md > release_notes.md
+          fi
+          if [ ! -s release_notes.md ]; then
+            git tag -l --format='%(contents)' "$VERSION" > release_notes.md
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body_path: release_notes.md
+          files: |
+            ${{ env.BINARY_NAME }}-*
+            dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test-linux, test-macos, test-windows]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build multi-arch Docker image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t ssltriage:latest \
+            --target final \
+            .
+
+  publish-docker:
+    name: Publish Docker Image
+    runs-on: ubuntu-latest
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          target: final
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/ssltriage:latest
+            ${{ secrets.DOCKER_USERNAME }}/ssltriage:${{ steps.get_version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

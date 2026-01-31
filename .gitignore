@@ -1,0 +1,31 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts (ADD MORE AS NEEDED)
+output.txt
+test_output.html
+test_output.json
+test_output.csv
+*.log
+*.tmp
+temp/
+test_data/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib

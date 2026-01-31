@@ -1,0 +1,6 @@
+[submodule "Skills"]
+	path = Skills
+	url = git@github.com:muratcankoylan/Agent-Skills-for-Context-Engineering.git
+[submodule "rules"]
+	path = rules
+	url = git@github.com:sahin/ai-rules.git
