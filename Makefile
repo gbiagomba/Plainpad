@@ -2,10 +2,10 @@
 # Satisfies RULE 2 - maintain Makefile
 # Satisfies RULE 1 - test before delivery
 
-APP_NAME := program_name
+APP_NAME := plainpad
 CARGO := cargo
 
-.PHONY: all build release install run test clean
+.PHONY: all build release install run test fmt clippy ci clean
 
 all: release
 
@@ -18,10 +18,18 @@ install:
 	$(CARGO) install --path .
 
 run:
-	$(CARGO) run --release -- $(ARGS)
+	$(CARGO) run --release
 
 test:
 	$(CARGO) test
+
+fmt:
+	$(CARGO) fmt --all
+
+clippy:
+	$(CARGO) clippy --all-targets -- -D warnings
+
+ci: fmt clippy test build
 
 clean:
 	$(CARGO) clean

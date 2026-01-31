@@ -8,23 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Feature in development
+- TBD
 
-## [1.0.0] - 2025-12-05
+## [0.1.0] - 2026-01-31
 
 ### Added
-- Initial release
-- Core functionality implemented
-- Multi-platform support (Linux, macOS, Windows)
-- Cross-architecture builds (x64, ARM64)
-- GitHub Actions CI/CD pipeline
-- Docker support
-- Comprehensive README and documentation
-
-### Security
-- Secure coding practices applied
-- Input validation implemented
-- Error handling hardened
+- Initial plainpad scaffold with egui/eframe app shell
+- Ropey-backed document model and tab management
+- Native file open/save dialogs via rfd
+- Cross-platform install scripts and CI packaging
+- Updated project documentation and metadata
 
 ---
 

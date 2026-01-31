@@ -1,4 +1,4 @@
-# AGENT INSTRUCTIONS — **plainpad**
+# AGENT INSTRUCTIONS - **plainpad**
 
 **Native Rust Notepad Replacement (Windows-first, Cross-Platform)**
 
@@ -7,7 +7,7 @@
 
 ---
 
-## 🔴 PROJECT OVERRIDE (READ FIRST)
+## ?? PROJECT OVERRIDE (READ FIRST)
 
 This project is **NOT a CLI tool**.
 
@@ -38,9 +38,9 @@ cargo build --release
 ```
 
 **Prohibition**:
-❌ NEVER deliver untested, unformatted, or broken code
-❌ NEVER bypass clippy warnings
-❌ NEVER introduce `unsafe` without explicit approval
+? NEVER deliver untested, unformatted, or broken code
+? NEVER bypass clippy warnings
+? NEVER introduce `unsafe` without explicit approval
 
 ---
 
@@ -185,7 +185,7 @@ GitHub Actions MUST:
 
 ---
 
-# 2. plainpad — SYSTEM PROMPT (LOCKED)
+# 2. plainpad - SYSTEM PROMPT (LOCKED)
 
 ## Role
 
@@ -202,11 +202,11 @@ Build a **fast, boring, trustworthy text editor** that:
 
 ## Hard Non-Goals
 
-❌ No Electron / Node / WASM
-❌ No IDE features (LSP, syntax intelligence)
-❌ No markdown preview or rich text
-❌ No plugin ecosystem
-❌ No background services
+? No Electron / Node / WASM
+? No IDE features (LSP, syntax intelligence)
+? No markdown preview or rich text
+? No plugin ecosystem
+? No background services
 
 If Notepad++ feels *too heavy* and Windows Notepad feels *almost enough*,
 **plainpad lives exactly in between.**
@@ -261,25 +261,25 @@ If Notepad++ feels *too heavy* and Windows Notepad feels *almost enough*,
 
 ```text
 plainpad/
-├── src/
-│   ├── main.rs              # App entry
-│   ├── app.rs               # eframe App impl
-│   ├── editor.rs            # Editor coordination
-│   ├── document.rs          # ropey-backed document model
-│   ├── shortcuts.rs         # Keyboard handling
-│   └── ui/
-│       ├── mod.rs
-│       ├── menu.rs
-│       ├── tabs.rs
-│       └── editor_view.rs
-├── docs/
-│   └── AI_INSTRUCTIONS.md   # This file (copy of AGENT.md)
-├── README.md
-├── CHANGELOG.md
-├── .version-tracking.md
-├── Makefile
-├── .gitignore
-├── Cargo.toml
+��� src/
+�   ��� main.rs              # App entry
+�   ��� app.rs               # eframe App impl
+�   ��� editor.rs            # Editor coordination
+�   ��� document.rs          # ropey-backed document model
+�   ��� shortcuts.rs         # Keyboard handling
+�   ��� ui/
+�       ��� mod.rs
+�       ��� menu.rs
+�       ��� tabs.rs
+�       ��� editor_view.rs
+��� docs/
+�   ��� AI_INSTRUCTIONS.md   # This file (copy of AGENT.md)
+��� README.md
+��� CHANGELOG.md
+��� .version-tracking.md
+��� Makefile
+��� .gitignore
+��� Cargo.toml
 ```
 
 No global state.

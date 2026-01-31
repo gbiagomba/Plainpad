@@ -20,8 +20,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ARG APP_NAME=program_name
-ARG APP_VERSION=1.0.0
+ARG APP_NAME=plainpad
+ARG APP_VERSION=0.1.0
 ARG APP_MAINTAINER="Gilles Biagomba <gilles.infosec@gmail.com>"
 
 LABEL maintainer="${APP_MAINTAINER}"
@@ -34,5 +34,5 @@ USER ${APP_NAME}
 
 COPY --from=builder /app/target/release/${APP_NAME} /usr/local/bin/${APP_NAME}
 
-ENTRYPOINT ["program_name"]
-CMD ["--help"]
+ENTRYPOINT ["plainpad"]
+CMD []

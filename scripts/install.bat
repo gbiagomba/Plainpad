@@ -1,10 +1,10 @@
 @echo off
 REM install.bat
-REM Simple Windows installer for program_name (satisfies RULE 3)
+REM Simple Windows installer for plainpad (satisfies RULE 3)
 
 setlocal enabledelayedexpansion
 
-set APP_NAME=program_name
+set APP_NAME=plainpad
 set REPO=gbiagomba/%APP_NAME%
 set INSTALL_DIR=%ProgramFiles%\%APP_NAME%
 
@@ -31,43 +31,23 @@ if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     exit /b 1
 )
 
-REM Check if cargo exists
-where cargo >nul 2>&1
-if %errorlevel% equ 0 (
-    echo ?? Installing via Cargo...
-    cargo install --git https://github.com/%REPO%
-    echo.
-    echo ? %APP_NAME% installed successfully!
-    echo Run: %APP_NAME% --help
-    pause
-    exit /b 0
-)
-
-echo ??  Cargo not found, installing from GitHub Release...
-echo.
-
-REM Download binary from GitHub Release
 set BINARY=%APP_NAME%-windows-%ARCH%.exe
-echo Downloading %BINARY%...
+set URL=https://github.com/%REPO%/releases/latest/download/%BINARY%
 
-REM Use PowerShell to download (works on Windows 7+)
-powershell -Command "& {$tag = (Invoke-RestMethod 'https://api.github.com/repos/%REPO%/releases/latest').tag_name; Invoke-WebRequest -Uri \"https://github.com/%REPO%/releases/download/$tag/%BINARY%\" -OutFile \"%TEMP%\%APP_NAME%.exe\" -UseBasicParsing}"
+echo Downloading %BINARY%...
+powershell -Command "Invoke-WebRequest -Uri '%URL%' -OutFile '%TEMP%\%APP_NAME%.exe' -UseBasicParsing"
 
 if not exist "%TEMP%\%APP_NAME%.exe" (
-    echo ? Failed to download binary
+    echo ? Failed to download %BINARY%
     pause
     exit /b 1
 )
 
-REM Create install directory
 if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
-
-REM Move binary
 move /y "%TEMP%\%APP_NAME%.exe" "%INSTALL_DIR%\%APP_NAME%.exe"
 
 echo ? Binary installed to: %INSTALL_DIR%\%APP_NAME%.exe
 
-REM Add to PATH
 echo %PATH% | find /i "%INSTALL_DIR%" >nul
 if %errorlevel% neq 0 (
     echo Adding to system PATH...
@@ -77,5 +57,5 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ? %APP_NAME% installed successfully!
-echo Run: %APP_NAME% --help
+echo Launch %APP_NAME% from Start Menu or run '%APP_NAME%' in a terminal.
 pause

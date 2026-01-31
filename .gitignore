@@ -16,9 +16,7 @@ Thumbs.db
 
 # Test artifacts (ADD MORE AS NEEDED)
 output.txt
-test_output.html
-test_output.json
-test_output.csv
+test_output.*
 *.log
 *.tmp
 temp/
