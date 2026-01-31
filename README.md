@@ -1,6 +1,6 @@
 # plainpad
 
-> VERSION: 0.2.3  \
+> VERSION: 0.2.5  \
 > DESCRIPTION: A fast, boring, native Rust notepad replacement.  \
 > AUTHOR: Gilles Biagomba  \
 > LICENSE: GPL-3.0

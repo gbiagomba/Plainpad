@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-01-31
+
+### Changed
+- Commented out ARM64 cross-build jobs in CI
+
+## [0.2.4] - 2026-01-31
+
+### Changed
+- Use `macos-latest` runner in CI matrix
+
 ## [0.2.3] - 2026-01-31
 
 ### Fixed
