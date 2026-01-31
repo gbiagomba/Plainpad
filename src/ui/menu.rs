@@ -4,9 +4,16 @@ use eframe::egui;
 pub enum MenuAction {
     NewTab,
     Open,
+    Print,
     Save,
     SaveAs,
     CloseTab,
+    Undo,
+    Redo,
+    Cut,
+    Copy,
+    Paste,
+    SelectAll,
     Quit,
 }
 
@@ -21,6 +28,10 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             }
             if ui.button("Open...\tCtrl+O").clicked() {
                 action = Some(MenuAction::Open);
+                ui.close_menu();
+            }
+            if ui.button("Print...\tCtrl+P").clicked() {
+                action = Some(MenuAction::Print);
                 ui.close_menu();
             }
             if ui.button("Save\tCtrl+S").clicked() {
@@ -38,6 +49,34 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             }
             if ui.button("Quit").clicked() {
                 action = Some(MenuAction::Quit);
+                ui.close_menu();
+            }
+        });
+        ui.menu_button("Edit", |ui| {
+            if ui.button("Undo\tCtrl+Z").clicked() {
+                action = Some(MenuAction::Undo);
+                ui.close_menu();
+            }
+            if ui.button("Redo\tCtrl+Y").clicked() {
+                action = Some(MenuAction::Redo);
+                ui.close_menu();
+            }
+            ui.separator();
+            if ui.button("Cut\tCtrl+X").clicked() {
+                action = Some(MenuAction::Cut);
+                ui.close_menu();
+            }
+            if ui.button("Copy\tCtrl+C").clicked() {
+                action = Some(MenuAction::Copy);
+                ui.close_menu();
+            }
+            if ui.button("Paste\tCtrl+V").clicked() {
+                action = Some(MenuAction::Paste);
+                ui.close_menu();
+            }
+            ui.separator();
+            if ui.button("Select All\tCtrl+A").clicked() {
+                action = Some(MenuAction::SelectAll);
                 ui.close_menu();
             }
         });

@@ -1,6 +1,6 @@
 # plainpad
 
-> VERSION: 0.1.0  \
+> VERSION: 0.2.1  \
 > DESCRIPTION: A fast, boring, native Rust notepad replacement.  \
 > AUTHOR: Gilles Biagomba  \
 > LICENSE: GPL-3.0
@@ -69,24 +69,24 @@ sudo mv plainpad-* /usr/local/bin/plainpad
 
 **Linux/macOS/Unix:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/gbiagomba/plainpad/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/gbiagomba/Plainpad/main/scripts/install.sh | bash
 # Or download and run locally:
-wget https://raw.githubusercontent.com/gbiagomba/plainpad/main/scripts/install.sh
+wget https://raw.githubusercontent.com/gbiagomba/Plainpad/main/scripts/install.sh
 chmod +x install.sh
 ./install.sh
 ```
 
 **Windows (PowerShell - Run as Administrator):**
 ```powershell
-irm https://raw.githubusercontent.com/gbiagomba/plainpad/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/gbiagomba/Plainpad/main/scripts/install.ps1 | iex
 # Or download and run locally:
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/gbiagomba/plainpad/main/scripts/install.ps1 -OutFile install.ps1
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/gbiagomba/Plainpad/main/scripts/install.ps1 -OutFile install.ps1
 .\install.ps1
 ```
 
 **Windows (Batch - Run as Administrator):**
 ```batch
-curl -L https://raw.githubusercontent.com/gbiagomba/plainpad/main/scripts/install.bat -o install.bat
+curl -L https://raw.githubusercontent.com/gbiagomba/Plainpad/main/scripts/install.bat -o install.bat
 install.bat
 ```
 

@@ -5,7 +5,7 @@
 set -euo pipefail
 
 APP_NAME="plainpad"
-REPO="gbiagomba/${APP_NAME}"
+REPO="gbiagomba/Plainpad"
 INSTALL_DIR="/usr/local/bin"
 
 RED='\033[0;31m'

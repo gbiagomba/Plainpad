@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-01-31
+
+### Fixed
+- Added missing `physical_key` field for synthetic edit events
+
+## [0.2.0] - 2026-01-31
+
 ### Added
-- TBD
+- File menu print placeholder and Edit menu actions
+- Shortcut routing for print command
+- Install/release URLs aligned to the Plainpad repository
 
 ## [0.1.0] - 2026-01-31
 

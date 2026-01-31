@@ -1,7 +1,7 @@
 use crate::document::Document;
 use eframe::egui;
 
-pub fn editor_view(ui: &mut egui::Ui, doc: &mut Document) {
+pub fn editor_view(ui: &mut egui::Ui, doc: &mut Document) -> egui::Response {
     let response = ui.add(
         egui::TextEdit::multiline(doc.text_mut())
             .font(egui::TextStyle::Monospace)
@@ -13,4 +13,6 @@ pub fn editor_view(ui: &mut egui::Ui, doc: &mut Document) {
     if response.changed() {
         doc.sync_rope();
     }
+
+    response
 }

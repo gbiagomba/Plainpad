@@ -5,7 +5,7 @@ REM Simple Windows installer for plainpad (satisfies RULE 3)
 setlocal enabledelayedexpansion
 
 set APP_NAME=plainpad
-set REPO=gbiagomba/%APP_NAME%
+set REPO=gbiagomba/Plainpad
 set INSTALL_DIR=%ProgramFiles%\%APP_NAME%
 
 echo ?? Installing %APP_NAME%...

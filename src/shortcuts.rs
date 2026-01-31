@@ -4,6 +4,7 @@ use eframe::egui;
 pub enum ShortcutCommand {
     NewTab,
     Open,
+    Print,
     Save,
     SaveAs,
     CloseTab,
@@ -28,6 +29,10 @@ pub fn detect(ctx: &egui::Context) -> Option<ShortcutCommand> {
 
     if input.modifiers.command && input.key_pressed(egui::Key::O) {
         return Some(ShortcutCommand::Open);
+    }
+
+    if input.modifiers.command && input.key_pressed(egui::Key::P) {
+        return Some(ShortcutCommand::Print);
     }
 
     if input.modifiers.command && input.key_pressed(egui::Key::W) {

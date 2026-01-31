@@ -1,11 +1,11 @@
 [package]
 name = "plainpad"
-version = "0.1.0"
+version = "0.2.1"
 authors = ["Gilles Biagomba <gilles.infosec@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"
 description = "A fast, boring, native Rust notepad replacement."
-repository = "https://github.com/gbiagomba/plainpad"
+repository = "https://github.com/gbiagomba/Plainpad"
 keywords = ["notepad", "text-editor", "gui", "desktop"]
 categories = ["gui"]
 

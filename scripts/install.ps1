@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 $AppName = "plainpad"
-$Repo = "gbiagomba/$AppName"
+$Repo = "gbiagomba/Plainpad"
 $InstallDir = "$env:ProgramFiles\$AppName"
 
 Write-Host "?? Installing $AppName..." -ForegroundColor Cyan

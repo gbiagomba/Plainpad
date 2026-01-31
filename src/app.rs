@@ -10,11 +10,18 @@ use rfd::FileDialog;
 enum AppCommand {
     NewTab,
     Open,
+    Print,
     Save,
     SaveAs,
     CloseTab,
     NextTab,
     PreviousTab,
+    Undo,
+    Redo,
+    Cut,
+    Copy,
+    Paste,
+    SelectAll,
     Quit,
 }
 
@@ -23,9 +30,16 @@ impl From<ui::menu::MenuAction> for AppCommand {
         match action {
             ui::menu::MenuAction::NewTab => Self::NewTab,
             ui::menu::MenuAction::Open => Self::Open,
+            ui::menu::MenuAction::Print => Self::Print,
             ui::menu::MenuAction::Save => Self::Save,
             ui::menu::MenuAction::SaveAs => Self::SaveAs,
             ui::menu::MenuAction::CloseTab => Self::CloseTab,
+            ui::menu::MenuAction::Undo => Self::Undo,
+            ui::menu::MenuAction::Redo => Self::Redo,
+            ui::menu::MenuAction::Cut => Self::Cut,
+            ui::menu::MenuAction::Copy => Self::Copy,
+            ui::menu::MenuAction::Paste => Self::Paste,
+            ui::menu::MenuAction::SelectAll => Self::SelectAll,
             ui::menu::MenuAction::Quit => Self::Quit,
         }
     }
@@ -36,6 +50,7 @@ impl From<ShortcutCommand> for AppCommand {
         match command {
             ShortcutCommand::NewTab => Self::NewTab,
             ShortcutCommand::Open => Self::Open,
+            ShortcutCommand::Print => Self::Print,
             ShortcutCommand::Save => Self::Save,
             ShortcutCommand::SaveAs => Self::SaveAs,
             ShortcutCommand::CloseTab => Self::CloseTab,
@@ -49,6 +64,7 @@ pub struct PlainpadApp {
     editor: Editor,
     confirm_close: Option<usize>,
     error_message: Option<String>,
+    editor_focused: bool,
 }
 
 impl PlainpadApp {
@@ -57,6 +73,7 @@ impl PlainpadApp {
             editor: Editor::new(),
             confirm_close: None,
             error_message: None,
+            editor_focused: false,
         }
     }
 
@@ -64,6 +81,7 @@ impl PlainpadApp {
         match command {
             AppCommand::NewTab => self.editor.new_document(),
             AppCommand::Open => self.open_file_dialog(),
+            AppCommand::Print => self.show_print_notice(),
             AppCommand::Save => self.save_current(),
             AppCommand::SaveAs => self.save_as_current(),
             AppCommand::CloseTab => {
@@ -72,8 +90,51 @@ impl PlainpadApp {
             }
             AppCommand::NextTab => self.editor.next_tab(),
             AppCommand::PreviousTab => self.editor.previous_tab(),
+            AppCommand::Undo => self.send_edit_key(ctx, egui::Key::Z, false),
+            AppCommand::Redo => self.send_edit_key(ctx, egui::Key::Y, false),
+            AppCommand::Cut => self.send_edit_event(ctx, egui::Event::Cut),
+            AppCommand::Copy => self.send_edit_event(ctx, egui::Event::Copy),
+            AppCommand::Paste => self.send_edit_key(ctx, egui::Key::V, false),
+            AppCommand::SelectAll => self.send_edit_key(ctx, egui::Key::A, false),
             AppCommand::Quit => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
         }
+    }
+
+    fn send_edit_key(&self, ctx: &egui::Context, key: egui::Key, shift: bool) {
+        if !self.editor_focused {
+            return;
+        }
+
+        let modifiers = egui::Modifiers {
+            command: true,
+            shift,
+            ..Default::default()
+        };
+
+        ctx.input_mut(|input| {
+            input.events.push(egui::Event::Key {
+                key,
+                physical_key: None,
+                pressed: true,
+                modifiers,
+                repeat: false,
+            });
+            input.events.push(egui::Event::Key {
+                key,
+                physical_key: None,
+                pressed: false,
+                modifiers,
+                repeat: false,
+            });
+        });
+    }
+
+    fn send_edit_event(&self, ctx: &egui::Context, event: egui::Event) {
+        if !self.editor_focused {
+            return;
+        }
+
+        ctx.input_mut(|input| input.events.push(event));
     }
 
     fn request_close(&mut self, index: usize) {
@@ -93,6 +154,10 @@ impl PlainpadApp {
                 self.error_message = Some(format!("Failed to open file: {err}"));
             }
         }
+    }
+
+    fn show_print_notice(&mut self) {
+        self.error_message = Some("Printing is not available yet.".to_string());
     }
 
     fn save_current(&mut self) {
@@ -146,9 +211,12 @@ impl eframe::App for PlainpadApp {
             self.handle_command(ctx, command);
         }
 
+        self.editor_focused = false;
+
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(doc) = self.editor.current_mut() {
-                ui::editor_view::editor_view(ui, doc);
+                let response = ui::editor_view::editor_view(ui, doc);
+                self.editor_focused = response.has_focus();
             }
         });
 
