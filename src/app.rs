@@ -19,6 +19,7 @@ enum AppCommand {
     Save,
     SaveAs,
     SaveAll,
+    CloseAll,
     CloseTab,
     CloseTabsLeft,
     CloseTabsRight,
@@ -37,6 +38,7 @@ enum AppCommand {
     ToggleStatusBar(bool),
     ToggleLineNumbers(bool),
     Quit,
+    ForceQuit,
 }
 
 impl From<ui::menu::MenuAction> for AppCommand {
@@ -48,6 +50,7 @@ impl From<ui::menu::MenuAction> for AppCommand {
             ui::menu::MenuAction::Save => Self::Save,
             ui::menu::MenuAction::SaveAs => Self::SaveAs,
             ui::menu::MenuAction::SaveAll => Self::SaveAll,
+            ui::menu::MenuAction::CloseAll => Self::CloseAll,
             ui::menu::MenuAction::CloseTab => Self::CloseTab,
             ui::menu::MenuAction::CloseTabsLeft => Self::CloseTabsLeft,
             ui::menu::MenuAction::CloseTabsRight => Self::CloseTabsRight,
@@ -62,6 +65,7 @@ impl From<ui::menu::MenuAction> for AppCommand {
             ui::menu::MenuAction::ToggleStatusBar(enabled) => Self::ToggleStatusBar(enabled),
             ui::menu::MenuAction::ToggleLineNumbers(enabled) => Self::ToggleLineNumbers(enabled),
             ui::menu::MenuAction::Quit => Self::Quit,
+            ui::menu::MenuAction::ForceQuit => Self::ForceQuit,
         }
     }
 }
@@ -100,6 +104,7 @@ pub struct PlainpadApp {
     confirm_close: Option<usize>,
     pending_close: Vec<usize>,
     confirm_quit: bool,
+    allow_quit: bool,
     error_message: Option<String>,
     editor_focused: bool,
     editor_id: Option<egui::Id>,
@@ -115,6 +120,7 @@ impl PlainpadApp {
             confirm_close: None,
             pending_close: Vec::new(),
             confirm_quit: false,
+            allow_quit: false,
             error_message: None,
             editor_focused: false,
             editor_id: None,
@@ -132,6 +138,7 @@ impl PlainpadApp {
             AppCommand::Save => self.save_current(),
             AppCommand::SaveAs => self.save_as_current(),
             AppCommand::SaveAll => self.save_all_non_empty(),
+            AppCommand::CloseAll => self.close_all_tabs(),
             AppCommand::CloseTab => {
                 let index = self.editor.active_index();
                 self.request_close(index);
@@ -153,6 +160,7 @@ impl PlainpadApp {
             AppCommand::ToggleStatusBar(enabled) => self.show_status_bar = enabled,
             AppCommand::ToggleLineNumbers(enabled) => self.show_line_numbers = enabled,
             AppCommand::Quit => self.request_quit(ctx),
+            AppCommand::ForceQuit => self.force_quit(ctx),
         }
     }
 
@@ -264,6 +272,15 @@ impl PlainpadApp {
         self.queue_close_tabs(indices);
     }
 
+    fn close_all_tabs(&mut self) {
+        let total = self.editor.documents().len();
+        if total == 0 {
+            return;
+        }
+        let indices = (0..total).collect::<Vec<_>>();
+        self.queue_close_tabs(indices);
+    }
+
     fn select_last_tab(&mut self) {
         let total = self.editor.documents().len();
         if total == 0 {
@@ -335,48 +352,23 @@ impl PlainpadApp {
     }
 
     fn replace_current(&mut self, ctx: &egui::Context) {
-        let Some(selection) = self.selection_char_range(ctx) else {
-            self.find_next(ctx);
-            return;
-        };
         let query = self.find_panel.query.clone();
         if query.is_empty() {
             self.find_panel.error = Some("Enter search text to replace.".to_string());
             return;
         }
-        if selection.start == selection.end {
-            self.find_next(ctx);
-            return;
-        }
-
-        let Some(doc_text) = self.editor.current().map(Document::text) else {
-            return;
-        };
-        let selection_text = slice_char_range(doc_text, &selection);
-        let replacement = match self.replace_match(&query, selection_text) {
-            Ok(Some(replacement)) => replacement,
-            Ok(None) => {
+        if self.try_replace_selection(ctx, &query) {
+            if self.find_panel.error.is_none() {
                 self.find_next(ctx);
-                return;
             }
-            Err(error) => {
-                self.find_panel.error = Some(error);
-                return;
-            }
-        };
-
-        if let Some(doc) = self.editor.current_mut() {
-            let start_byte = byte_index_from_char(doc.text(), selection.start);
-            let end_byte = byte_index_from_char(doc.text(), selection.end);
-            doc.text_mut()
-                .replace_range(start_byte..end_byte, &replacement);
-            doc.sync_rope();
+            return;
         }
 
-        let end_char = selection.start + replacement.chars().count();
-        self.select_char_range(ctx, selection.start..end_char);
-        self.find_panel.error = None;
         self.find_next(ctx);
+
+        if self.try_replace_selection(ctx, &query) && self.find_panel.error.is_none() {
+            self.find_next(ctx);
+        }
     }
 
     fn replace_all(&mut self) {
@@ -403,6 +395,38 @@ impl PlainpadApp {
             doc.sync_rope();
         }
         self.find_panel.error = None;
+    }
+
+    fn try_replace_selection(&mut self, ctx: &egui::Context, query: &str) -> bool {
+        let selection = match self.selection_char_range(ctx) {
+            Some(range) if range.start != range.end => range,
+            _ => return false,
+        };
+        let Some(doc_text) = self.editor.current().map(Document::text) else {
+            return false;
+        };
+        let selection_text = slice_char_range(doc_text, &selection);
+        let replacement = match self.replace_match(query, selection_text) {
+            Ok(Some(replacement)) => replacement,
+            Ok(None) => return false,
+            Err(error) => {
+                self.find_panel.error = Some(error);
+                return true;
+            }
+        };
+
+        if let Some(doc) = self.editor.current_mut() {
+            let start_byte = byte_index_from_char(doc.text(), selection.start);
+            let end_byte = byte_index_from_char(doc.text(), selection.end);
+            doc.text_mut()
+                .replace_range(start_byte..end_byte, &replacement);
+            doc.sync_rope();
+        }
+
+        let end_char = selection.start + replacement.chars().count();
+        self.select_char_range(ctx, selection.start..end_char);
+        self.find_panel.error = None;
+        true
     }
 
     fn find_match_range(
@@ -450,6 +474,7 @@ impl PlainpadApp {
     }
 
     fn request_quit(&mut self, ctx: &egui::Context) {
+        self.allow_quit = false;
         if self.has_dirty_documents() {
             self.confirm_quit = true;
         } else {
@@ -457,7 +482,18 @@ impl PlainpadApp {
         }
     }
 
+    fn force_quit(&mut self, ctx: &egui::Context) {
+        self.confirm_quit = false;
+        self.confirm_close = None;
+        self.pending_close.clear();
+        self.allow_quit = true;
+        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+    }
+
     fn handle_close_request(&mut self, ctx: &egui::Context) {
+        if self.allow_quit {
+            return;
+        }
         if self.confirm_quit {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             return;
@@ -740,7 +776,11 @@ impl eframe::App for PlainpadApp {
                         }
                         if ui.button("Discard").clicked() {
                             self.confirm_quit = false;
+                            self.allow_quit = true;
                             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        }
+                        if ui.button("Force Quit").clicked() {
+                            self.force_quit(ctx);
                         }
                         if ui.button("Cancel").clicked() {
                             self.confirm_quit = false;

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-01-31
+
+### Added
+- Force Quit option to close the app immediately
+
+## [0.5.1] - 2026-01-31
+
+### Added
+- File menu Close All action for tab cleanup
+
+### Fixed
+- Replace button now replaces the next match when no selection exists
+- Quit prompt discard option now exits as expected
+
 ## [0.5.0] - 2026-01-31
 
 ### Added

@@ -8,9 +8,11 @@ pub enum MenuAction {
     Save,
     SaveAs,
     SaveAll,
+    CloseAll,
     CloseTab,
     CloseTabsLeft,
     CloseTabsRight,
+    ForceQuit,
     Undo,
     Redo,
     Find,
@@ -58,6 +60,10 @@ pub fn menu_bar(
                 ui.close_menu();
             }
             ui.separator();
+            if ui.button("Close All").clicked() {
+                action = Some(MenuAction::CloseAll);
+                ui.close_menu();
+            }
             if ui.button("Close Tab\tCtrl+W").clicked() {
                 action = Some(MenuAction::CloseTab);
                 ui.close_menu();
@@ -72,6 +78,10 @@ pub fn menu_bar(
             }
             if ui.button("Quit\tCtrl+Shift+W").clicked() {
                 action = Some(MenuAction::Quit);
+                ui.close_menu();
+            }
+            if ui.button("Force Quit").clicked() {
+                action = Some(MenuAction::ForceQuit);
                 ui.close_menu();
             }
         });
