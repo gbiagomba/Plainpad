@@ -7,17 +7,30 @@ pub enum MenuAction {
     Print,
     Save,
     SaveAs,
+    SaveAll,
+    CloseAll,
     CloseTab,
+    CloseTabsLeft,
+    CloseTabsRight,
+    ForceQuit,
     Undo,
     Redo,
+    Find,
+    Replace,
     Cut,
     Copy,
     Paste,
     SelectAll,
+    ToggleStatusBar(bool),
+    ToggleLineNumbers(bool),
     Quit,
 }
 
-pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
+pub fn menu_bar(
+    ui: &mut egui::Ui,
+    show_status_bar: bool,
+    show_line_numbers: bool,
+) -> Option<MenuAction> {
     let mut action = None;
 
     egui::menu::bar(ui, |ui| {
@@ -42,13 +55,33 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
                 action = Some(MenuAction::SaveAs);
                 ui.close_menu();
             }
+            if ui.button("Save All").clicked() {
+                action = Some(MenuAction::SaveAll);
+                ui.close_menu();
+            }
             ui.separator();
+            if ui.button("Close All").clicked() {
+                action = Some(MenuAction::CloseAll);
+                ui.close_menu();
+            }
             if ui.button("Close Tab\tCtrl+W").clicked() {
                 action = Some(MenuAction::CloseTab);
                 ui.close_menu();
             }
-            if ui.button("Quit").clicked() {
+            if ui.button("Close Tabs to the Left").clicked() {
+                action = Some(MenuAction::CloseTabsLeft);
+                ui.close_menu();
+            }
+            if ui.button("Close Tabs to the Right").clicked() {
+                action = Some(MenuAction::CloseTabsRight);
+                ui.close_menu();
+            }
+            if ui.button("Quit\tCtrl+Shift+W").clicked() {
                 action = Some(MenuAction::Quit);
+                ui.close_menu();
+            }
+            if ui.button("Force Quit").clicked() {
+                action = Some(MenuAction::ForceQuit);
                 ui.close_menu();
             }
         });
@@ -59,6 +92,15 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             }
             if ui.button("Redo\tCtrl+Y").clicked() {
                 action = Some(MenuAction::Redo);
+                ui.close_menu();
+            }
+            ui.separator();
+            if ui.button("Find...\tCtrl+F").clicked() {
+                action = Some(MenuAction::Find);
+                ui.close_menu();
+            }
+            if ui.button("Replace...\tCtrl+H").clicked() {
+                action = Some(MenuAction::Replace);
                 ui.close_menu();
             }
             ui.separator();
@@ -77,6 +119,18 @@ pub fn menu_bar(ui: &mut egui::Ui) -> Option<MenuAction> {
             ui.separator();
             if ui.button("Select All\tCtrl+A").clicked() {
                 action = Some(MenuAction::SelectAll);
+                ui.close_menu();
+            }
+        });
+        ui.menu_button("View", |ui| {
+            let mut status_bar = show_status_bar;
+            if ui.checkbox(&mut status_bar, "Status Bar").clicked() {
+                action = Some(MenuAction::ToggleStatusBar(status_bar));
+                ui.close_menu();
+            }
+            let mut line_numbers = show_line_numbers;
+            if ui.checkbox(&mut line_numbers, "Line Numbers").clicked() {
+                action = Some(MenuAction::ToggleLineNumbers(line_numbers));
                 ui.close_menu();
             }
         });

@@ -5,6 +5,7 @@ use eframe::egui;
 pub struct TabAction {
     pub select: Option<usize>,
     pub close: Option<usize>,
+    pub new_tab: bool,
 }
 
 pub fn tab_bar(ui: &mut egui::Ui, documents: &[Document], active: usize) -> TabAction {
@@ -26,6 +27,10 @@ pub fn tab_bar(ui: &mut egui::Ui, documents: &[Document], active: usize) -> TabA
             }
 
             ui.add_space(6.0);
+        }
+
+        if ui.small_button("+").clicked() {
+            action.new_tab = true;
         }
     });
 

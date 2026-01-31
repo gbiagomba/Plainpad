@@ -7,15 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.5] - 2026-01-31
+## [0.5.2] - 2026-01-31
 
-### Changed
-- Commented out ARM64 cross-build jobs in CI
+### Added
+- Force Quit option to close the app immediately
 
-## [0.2.4] - 2026-01-31
+## [0.5.1] - 2026-01-31
 
-### Changed
-- Use `macos-latest` runner in CI matrix
+### Added
+- File menu Close All action for tab cleanup
+
+### Fixed
+- Replace button now replaces the next match when no selection exists
+- Quit prompt discard option now exits as expected
+
+## [0.5.0] - 2026-01-31
+
+### Added
+- Find/replace dialog with regex search and replace all
+- Tab management actions to close tabs left or right of the active tab
+- Chrome-style tab shortcuts (Ctrl+1..9) and quit shortcut (Ctrl+Shift+W)
+- Quit confirmation when unsaved edits are open
+
+## [0.4.0] - 2026-01-31
+
+### Added
+- View menu toggles for status bar and line numbers
+- "+" tab button for quick new tabs
+- Save All option that saves non-empty tabs with txt default
+
+### Fixed
+- Edit > Paste uses clipboard text directly
+
+## [0.2.6] - 2026-01-31
+
+### Fixed
+- Ensure Edit menu actions target the editor focus reliably
+
+### Added
+- Save All option that saves non-empty tabs
 
 ## [0.2.3] - 2026-01-31
 
