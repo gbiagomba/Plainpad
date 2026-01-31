@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-01-31
+
+### Added
+- Re-enabled ARM64 builds for Linux, macOS, and Windows in CI
+
 ## [0.5.3] - 2026-01-31
 
 ### Changed

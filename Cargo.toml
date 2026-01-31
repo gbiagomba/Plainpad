@@ -1,6 +1,6 @@
 [package]
 name = "plainpad"
-version = "0.5.3"
+version = "0.5.4"
 authors = ["Gilles Biagomba <gilles.infosec@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"
