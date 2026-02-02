@@ -15,6 +15,7 @@ eframe = { version = "0.27", default-features = false, features = ["default_font
 regex = "1.10"
 ropey = "1.6"
 rfd = "0.14"
+velopack = "0.0"
 
 [[bin]]
 name = "plainpad"

@@ -163,6 +163,54 @@ jobs:
           name: ${{ env.APP_NAME }}-windows-aarch64
           path: ${{ env.APP_NAME }}-windows-aarch64.exe
 
+  windows-installer:
+    name: Windows Installer (Velopack)
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: swatinem/rust-cache@v2
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Get version from tag
+        id: get-version
+        shell: bash
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Create Velopack Release
+        run: |
+          vpk pack `
+            --packId "Plainpad" `
+            --packVersion "${{ steps.get-version.outputs.version }}" `
+            --packDir "target/release" `
+            --mainExe "plainpad.exe" `
+            --packTitle "Plainpad" `
+            --shortcuts "Desktop,StartMenuRoot"
+
+      - name: Upload Velopack artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: velopack-windows
+          path: Releases/*
+
   release:
     name: Release on tag
     runs-on: ubuntu-latest
@@ -171,6 +219,7 @@ jobs:
       - linux-arm64
       - macos-arm64
       - windows-arm64
+      - windows-installer
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
@@ -187,9 +236,22 @@ jobs:
           pattern: "*"
           merge-multiple: true
 
+      - name: List downloaded artifacts
+        run: |
+          echo "=== All files in current directory ==="
+          ls -la
+          echo "=== Looking for Velopack files ==="
+          find . -name "*.nupkg" -o -name "Setup.exe" -o -name "RELEASES" 2>/dev/null || true
+
       - name: Create checksums
         run: |
           for f in ${APP_NAME}-*; do
+            if [ -f "$f" ]; then
+              sha256sum "$f" > "$f.sha256"
+            fi
+          done
+          # Checksums for Velopack files
+          for f in Setup.exe RELEASES Plainpad-*.nupkg; do
             if [ -f "$f" ]; then
               sha256sum "$f" > "$f.sha256"
             fi
@@ -215,8 +277,14 @@ jobs:
           prerelease: false
           generate_release_notes: true
           body_path: release_notes.md
+          fail_on_unmatched_files: false
           files: |
             ${{ env.APP_NAME }}-*
             ${{ env.APP_NAME }}-*.sha256
+            Plainpad-*.nupkg
+            Setup.exe
+            Setup.exe.sha256
+            RELEASES
+            RELEASES.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
