@@ -1,6 +1,6 @@
 [package]
 name = "plainpad"
-version = "0.5.2"
+version = "0.5.4"
 authors = ["Gilles Biagomba <gilles.infosec@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"
@@ -15,6 +15,7 @@ eframe = { version = "0.27", default-features = false, features = ["default_font
 regex = "1.10"
 ropey = "1.6"
 rfd = "0.14"
+velopack = "0.0"
 
 [[bin]]
 name = "plainpad"

@@ -3,6 +3,7 @@ use crate::{
     editor::Editor,
     shortcuts::{detect, ShortcutCommand},
     ui,
+    updater::{self, UpdateStatus},
 };
 use arboard::Clipboard;
 use eframe::egui;
@@ -39,6 +40,7 @@ enum AppCommand {
     ToggleLineNumbers(bool),
     Quit,
     ForceQuit,
+    CheckForUpdates,
 }
 
 impl From<ui::menu::MenuAction> for AppCommand {
@@ -66,6 +68,7 @@ impl From<ui::menu::MenuAction> for AppCommand {
             ui::menu::MenuAction::ToggleLineNumbers(enabled) => Self::ToggleLineNumbers(enabled),
             ui::menu::MenuAction::Quit => Self::Quit,
             ui::menu::MenuAction::ForceQuit => Self::ForceQuit,
+            ui::menu::MenuAction::CheckForUpdates => Self::CheckForUpdates,
         }
     }
 }
@@ -111,6 +114,7 @@ pub struct PlainpadApp {
     show_status_bar: bool,
     show_line_numbers: bool,
     find_panel: FindPanel,
+    update_message: Option<String>,
 }
 
 impl PlainpadApp {
@@ -127,6 +131,7 @@ impl PlainpadApp {
             show_status_bar: true,
             show_line_numbers: false,
             find_panel: FindPanel::default(),
+            update_message: None,
         }
     }
 
@@ -161,6 +166,23 @@ impl PlainpadApp {
             AppCommand::ToggleLineNumbers(enabled) => self.show_line_numbers = enabled,
             AppCommand::Quit => self.request_quit(ctx),
             AppCommand::ForceQuit => self.force_quit(ctx),
+            AppCommand::CheckForUpdates => self.check_for_updates(),
+        }
+    }
+
+    fn check_for_updates(&mut self) {
+        match updater::check_for_updates() {
+            UpdateStatus::Available(version) => {
+                self.update_message = Some(format!(
+                    "A new version ({version}) is available. Would you like to update?"
+                ));
+            }
+            UpdateStatus::NoUpdate => {
+                self.update_message = Some("You are running the latest version.".to_string());
+            }
+            UpdateStatus::Error(err) => {
+                self.update_message = Some(format!("Failed to check for updates: {err}"));
+            }
         }
     }
 
@@ -847,6 +869,27 @@ impl eframe::App for PlainpadApp {
                     if ui.button("Dismiss").clicked() {
                         self.error_message = None;
                     }
+                });
+        }
+
+        if let Some(message) = self.update_message.clone() {
+            let is_update_available = message.contains("Would you like to update?");
+            egui::Window::new("Check for Updates")
+                .collapsible(false)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label(&message);
+                    ui.horizontal(|ui| {
+                        if is_update_available && ui.button("Update Now").clicked() {
+                            if let Err(err) = updater::download_and_apply() {
+                                self.error_message = Some(format!("Update failed: {err}"));
+                            }
+                            self.update_message = None;
+                        }
+                        if ui.button("Close").clicked() {
+                            self.update_message = None;
+                        }
+                    });
                 });
         }
     }

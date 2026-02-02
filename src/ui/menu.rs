@@ -24,6 +24,7 @@ pub enum MenuAction {
     ToggleStatusBar(bool),
     ToggleLineNumbers(bool),
     Quit,
+    CheckForUpdates,
 }
 
 pub fn menu_bar(
@@ -131,6 +132,12 @@ pub fn menu_bar(
             let mut line_numbers = show_line_numbers;
             if ui.checkbox(&mut line_numbers, "Line Numbers").clicked() {
                 action = Some(MenuAction::ToggleLineNumbers(line_numbers));
+                ui.close_menu();
+            }
+        });
+        ui.menu_button("Help", |ui| {
+            if ui.button("Check for Updates...").clicked() {
+                action = Some(MenuAction::CheckForUpdates);
                 ui.close_menu();
             }
         });

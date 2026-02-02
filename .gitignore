@@ -1,7 +1,6 @@
 # Rust
 /target/
 **/*.rs.bk
-Cargo.lock
 
 # IDEs
 .idea/
@@ -13,6 +12,7 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Test artifacts (ADD MORE AS NEEDED)
 output.txt

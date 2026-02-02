@@ -99,7 +99,7 @@ GUI apps **still require installers**.
 | OS          | Runner         | Arch  |
 | ----------- | -------------- | ----- |
 | Linux       | ubuntu-latest  | x64   |
-| macOS Intel | macos-13       | x64   |
+| macOS       | macos-latest   | x64   |
 | macOS ARM   | macos-14       | arm64 |
 | Windows     | windows-latest | x64   |
 
