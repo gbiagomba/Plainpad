@@ -12,7 +12,7 @@ categories = ["gui"]
 [dependencies]
 arboard = "3.6"
 eframe = { version = "0.27", default-features = false, features = ["default_fonts", "glow"] }
-regex = "1.10"
+regex = "1.12"
 ropey = "1.6"
 rfd = "0.14"
 velopack = "0.0"
